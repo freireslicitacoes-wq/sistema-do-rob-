@@ -10,6 +10,7 @@ Projeto para organizar vídeos, gerar cortes e preparar publicações no TikTok 
 - Respeitar as regras, limites e permissões oficiais do TikTok.
 - Nunca publicar conteúdo sem aprovação e consentimento explícitos do usuário.
 - Não armazenar tokens ou segredos no código-fonte.
+- Usar gerente de operações com autonomia controlada e aprovação humana antes de mudanças em produção.
 
 ## Fluxo principal
 
@@ -26,6 +27,10 @@ Projeto para organizar vídeos, gerar cortes e preparar publicações no TikTok 
 
 A aprovação em lote é o fluxo escolhido para o produto. A especificação está em [docs/approval-batch-flow.md](docs/approval-batch-flow.md).
 
+## Gerente de operações
+
+O gerente poderá monitorar, diagnosticar, executar recuperações previamente autorizadas, desenvolver correções em branches isoladas e executar testes automaticamente. Alterações em produção exigem aprovação humana. Consulte [docs/autonomous-engineering-manager.md](docs/autonomous-engineering-manager.md).
+
 ## Estado atual
 
-Repositório inicial. Ainda não há aplicação, integração TikTok, integração Google Drive, banco de dados ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
+Repositório de especificações. Ainda não há aplicação, gerente operacional, CI, integração TikTok, integração Google Drive, banco de dados ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
