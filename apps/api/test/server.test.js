@@ -76,3 +76,32 @@ test("database errors do not expose internal details", async () => {
     assert.doesNotMatch(JSON.stringify(body), /secret database detail/);
   });
 });
+
+test("dashboard is served from the API root", async () => {
+  await withServer(createAppServer(), async (base) => {
+    const response = await fetch(base + "/");
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /text\/html/);
+    assert.match(html, /Biblioteca de vídeos/);
+  });
+});
+
+test("library status returns visual categories and counts", async () => {
+  const rows = [
+    { id: "a", original_name: "01.mp4", visual_status: "not_published", publication_status: null },
+    { id: "b", original_name: "02.mp4", visual_status: "pending_today", publication_status: "scheduled" },
+    { id: "c", original_name: "03.mp4", visual_status: "published", publication_status: "published" }
+  ];
+  let sqlSeen = "";
+  const database = { query: async (sql) => { sqlSeen = sql; return { rows }; } };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/library/status");
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.summary, { not_published: 1, pending_today: 1, published: 1 });
+    assert.equal(body.items[1].visual_status, "pending_today");
+    assert.match(sqlSeen, /LEFT JOIN LATERAL/);
+    assert.doesNotMatch(sqlSeen, /pi\.timezone\s*=\s*pi\.timezone/);
+  });
+});
