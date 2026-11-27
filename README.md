@@ -41,6 +41,10 @@ A especificação está em [docs/approval-batch-flow.md](docs/approval-batch-flo
 
 O gerente poderá monitorar, diagnosticar, executar recuperações previamente autorizadas, desenvolver correções em branches isoladas e executar testes automaticamente. Alterações em produção exigem aprovação humana. Consulte [docs/autonomous-engineering-manager.md](docs/autonomous-engineering-manager.md).
 
+## Implementação — etapa 1
+
+A fundação inicial da API foi criada em `apps/api`: servidor HTTP Node.js, rota de saúde, tratamento de rota inexistente, testes automatizados e exemplo seguro de configuração. Consulte [docs/step-01-foundation.md](docs/step-01-foundation.md). Os testes ainda precisam ser executados em ambiente Node.js; não há confirmação de execução nesta etapa.
+
 ## Estado atual
 
-Repositório de especificações. Ainda não há aplicação, gerente operacional, CI, integração TikTok, integração Google Drive, banco de dados ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
+A aplicação está em construção. Ainda não há integração TikTok, integração Google Drive, banco de dados, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
