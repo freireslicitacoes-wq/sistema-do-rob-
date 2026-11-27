@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: tiktok_auto_publisher
       POSTGRES_USER: tapai
-      POSTGRES_PASSWORD: local_dev_only_change_me
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_only_change_me}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - tapai_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,5 +17,40 @@ services:
       timeout: 5s
       retries: 10
 
+  migrate:
+    image: postgres:17-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-local_dev_only_change_me}
+    volumes:
+      - ./infra/postgres/migrations:/migrations:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      psql -h postgres -U tapai -d tiktok_auto_publisher
+      -v ON_ERROR_STOP=1 -f /migrations/001_initial_schema.sql
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: tapai-api
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PORT: 3000
+      SERVICE_NAME: tiktok-auto-publisher-api
+      DATABASE_URL: postgresql://tapai:${POSTGRES_PASSWORD:-local_dev_only_change_me}@postgres:5432/tiktok_auto_publisher
+      MEDIA_STORAGE_DIR: /data/media
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-524288000}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - tapai_media_data:/data/media
+
 volumes:
   tapai_postgres_data:
+  tapai_media_data:
