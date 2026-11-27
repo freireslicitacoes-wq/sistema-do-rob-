@@ -94,8 +94,8 @@ export function createStorageManager({ database, directory, fileOps = { lstat, u
       const result = await tx.query(
         `WITH candidates AS (
            SELECT ma.id
-             FROM media_assets ma
-            WHERE ma.preserve_storage = FALSE
+             FROM media_assets ma CROSS JOIN storage_policies sp
+            WHERE sp.id = 1 AND ma.preserve_storage = FALSE
               AND ma.storage_state IN ('active','deletion_pending')
               AND EXISTS (SELECT 1 FROM publication_items pi WHERE pi.media_asset_id=ma.id)
               AND NOT EXISTS (
@@ -110,8 +110,6 @@ export function createStorageManager({ database, directory, fileOps = { lstat, u
               )
               AND (SELECT max(pi.published_at) FROM publication_items pi
                     WHERE pi.media_asset_id=ma.id) + make_interval(hours => sp.retention_hours) <= now()
-            CROSS JOIN storage_policies sp
-            WHERE sp.id = 1
             ORDER BY ma.delete_after NULLS FIRST, ma.created_at
             FOR UPDATE OF ma SKIP LOCKED
             LIMIT $1
