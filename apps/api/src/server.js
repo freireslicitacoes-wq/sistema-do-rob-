@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { createIngestionHandler } from "./ingestion.js";
 import { createStorageManager } from "./storage.js";
+import { createStorageCleanupScheduler } from "./storage-scheduler.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -53,6 +54,12 @@ export function createAppServer({ env = process.env, database = null } = {}) {
   const serviceName = env.SERVICE_NAME || "tiktok-auto-publisher-api";
   const handleIngestion = createIngestionHandler({ database, env });
   const storage = database ? createStorageManager({ database, directory: env.MEDIA_STORAGE_DIR || "./var/media" }) : null;
+  const cleanupScheduler = storage ? createStorageCleanupScheduler({
+    storage, database,
+    enabled: env.STORAGE_CLEANUP_SCHEDULER_ENABLED === "true",
+    intervalMs: Math.max(60_000, Number(env.STORAGE_CLEANUP_INTERVAL_MS || 900_000)),
+    batchSize: Math.min(100, Math.max(1, Number(env.STORAGE_CLEANUP_BATCH_SIZE || 25)))
+  }) : null;
 
   return createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
@@ -92,6 +99,11 @@ export function createAppServer({ env = process.env, database = null } = {}) {
 
       if (!database) {
         send(response, 503, { error: "database_not_configured", message: "Banco de dados não configurado." });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/storage/maintenance") {
+        send(response, 200, { scheduler: cleanupScheduler?.status() || { enabled: false, reason: "storage_not_configured" } });
         return;
       }
 
@@ -349,6 +361,8 @@ export function createAppServer({ env = process.env, database = null } = {}) {
       });
     }
   });
+  server.storageCleanupScheduler = cleanupScheduler;
+  return server;
 }
 
 const isMain = process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
@@ -363,7 +377,12 @@ if (isMain) {
     : null;
   const server = createAppServer({ database });
 
+  if (server.storageCleanupScheduler?.start()) {
+    console.log("Agendador de limpeza de armazenamento ativado (configuração explícita).");
+  }
+
   const shutdown = async () => {
+    server.storageCleanupScheduler?.stop();
     server.close();
     if (database) await database.close();
   };
