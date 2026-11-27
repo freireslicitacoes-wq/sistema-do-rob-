@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { createIngestionHandler } from "./ingestion.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -48,6 +49,7 @@ function optionalNonNegativeInteger(value, field) {
 
 export function createAppServer({ env = process.env, database = null } = {}) {
   const serviceName = env.SERVICE_NAME || "tiktok-auto-publisher-api";
+  const handleIngestion = createIngestionHandler({ database, env });
 
   return createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
@@ -56,6 +58,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
 
     try {
       const url = new URL(request.url, "http://localhost");
+      if (await handleIngestion(request, response, url.pathname)) return;
 
       if (request.method === "GET" && url.pathname === "/health") {
         let databaseStatus = "not_configured";
