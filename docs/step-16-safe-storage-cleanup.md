@@ -17,7 +17,8 @@
 ## Segurança e limitações
 
 - A limpeza continua desativada por padrão; nenhum arquivo será removido até habilitação deliberada da política.
-- Esta etapa não cria agendador automático. A limpeza é acionável pela rota manual, e a automação periódica será uma etapa posterior, após testes integrados.
+- A etapa 17 adiciona um agendador periódico opt-in. Ele exige `STORAGE_CLEANUP_SCHEDULER_ENABLED=true` e também `storage_policies.enabled=true`; ambas as chaves são necessárias para qualquer exclusão agendada.
+- O agendador usa advisory lock do PostgreSQL para impedir execução simultânea em instâncias diferentes. Registros `deletion_pending` elegíveis podem ser retomados em uma nova rodada.
 - A API ainda não possui autenticação. Não expor as rotas de administração/limpeza publicamente.
 - A operação usa armazenamento local em disco; referências de outros provedores são recusadas e encaminhadas para atenção.
 - Um arquivo em `needs_attention` não é apagado automaticamente; requer análise.
