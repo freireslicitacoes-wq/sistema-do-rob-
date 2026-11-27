@@ -55,7 +55,7 @@ A API agora possui pool PostgreSQL configurado por `DATABASE_URL`, health check 
 
 ## Implementação — etapa 4
 
-Foram definidos dois caminhos de entrada: link compartilhado de arquivo do Google Drive e arquivo anexado pelo computador. A API ganhou um parser seguro para reconhecer formatos comuns de links públicos do Drive. O download, upload binário, armazenamento e interface ainda serão implementados. Consulte [docs/step-04-ingestion-inputs.md](docs/step-04-ingestion-inputs.md).
+Foram implementados endpoints de upload multipart do desktop e importação de arquivo individual por link público do Google Drive. Os originais são armazenados em disco local configurável, com limite de tamanho, validação básica de formato e hash SHA-256, e registrados na biblioteca PostgreSQL. O Drive pode exigir confirmação e recusar download direto; pastas inteiras e links privados não são suportados. A interface visual e autenticação ainda não existem. Não exponha a API à internet. Consulte [docs/step-04-ingestion-inputs.md](docs/step-04-ingestion-inputs.md) e [apps/api/README.md](apps/api/README.md).
 
 ## Estado atual
 
