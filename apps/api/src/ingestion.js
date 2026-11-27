@@ -6,6 +6,7 @@ import { Transform, Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import Busboy from "busboy";
 import { parsePublicGoogleDriveLink } from "./google-drive.js";
+import { createStorageManager } from "./storage.js";
 
 const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"]);
 const DRIVE_HOSTS = new Set(["drive.google.com", "www.drive.google.com", "drive.usercontent.google.com"]);
@@ -116,6 +117,7 @@ async function downloadDriveFile(fileId, tempPath, maxBytes) {
 export function createIngestionHandler({ database, env = process.env } = {}) {
   const directory = env.MEDIA_STORAGE_DIR || "./var/media";
   const maxBytes = Number(env.MAX_UPLOAD_BYTES || DEFAULT_MAX_BYTES);
+  const storage = database && env.STORAGE_CAPACITY_GUARD === "true" ? createStorageManager({ database, directory }) : null;
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1024) throw new Error("MAX_UPLOAD_BYTES inválido.");
   return async function handleIngestion(request, response, pathname) {
     if (request.method === "POST" && pathname === "/api/media-assets/upload") {
@@ -125,6 +127,7 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
         response.writeHead(415); response.end(JSON.stringify({ error: "multipart_required", message: "Envie o vídeo como multipart/form-data no campo video." })); return true;
       }
       await mkdir(directory, { recursive: true });
+      if (storage) await storage.assertImportAllowed(Number(request.headers["content-length"] || 0));
       const tempPath = join(directory, ".upload-" + randomUUID());
       let uploadName = "";
       let fileSeen = false;
@@ -170,6 +173,7 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
       try { data = JSON.parse(body || "{}"); } catch { throw Object.assign(new Error("JSON inválido."), { statusCode: 400 }); }
       const parsed = parsePublicGoogleDriveLink(data.url);
       await mkdir(directory, { recursive: true });
+      if (storage) await storage.assertImportAllowed();
       const tempPath = join(directory, ".drive-" + randomUUID());
       try {
         await downloadDriveFile(parsed.fileId, tempPath, maxBytes);
