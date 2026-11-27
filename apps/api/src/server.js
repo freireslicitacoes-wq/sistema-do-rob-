@@ -181,6 +181,55 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
+
+      if (request.method === "POST" && url.pathname === "/api/campaigns/from-library") {
+        const body = await readJson(request);
+        const name = requiredString(body.name, "name", 200);
+        const mode = body.mode === undefined ? "bulk_library" : requiredString(body.mode, "mode", 40);
+        if (!["bulk_library", "clips", "live_monitor"].includes(mode)) {
+          send(response, 400, { error: "invalid_campaign_mode", message: "mode inválido." }); return;
+        }
+        const ids = body.media_asset_ids;
+        if (!Array.isArray(ids) || ids.length < 1 || ids.length > 500) {
+          send(response, 400, { error: "invalid_selection", message: "Selecione de 1 a 500 vídeos." }); return;
+        }
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (ids.some(id => typeof id !== "string" || !uuidPattern.test(id)) || new Set(ids).size !== ids.length) {
+          send(response, 400, { error: "invalid_selection", message: "A seleção contém identificadores inválidos ou repetidos." }); return;
+        }
+        const dailyTarget = optionalNonNegativeInteger(body.daily_target, "daily_target");
+        if (dailyTarget === 0) { send(response, 400, { error: "invalid_daily_target", message: "daily_target deve ser maior que zero." }); return; }
+        const timezone = body.timezone === undefined ? "America/Belem" : requiredString(body.timezone, "timezone", 100);
+        try { new Intl.DateTimeFormat("pt-BR", { timeZone: timezone }); }
+        catch { send(response, 400, { error: "invalid_timezone", message: "Fuso horário inválido." }); return; }
+        const result = await database.query(
+          `WITH eligible AS MATERIALIZED (
+             SELECT id, natural_sort_number, original_name, import_position
+               FROM media_assets WHERE id = ANY($5::uuid[]) AND status IN ('imported', 'ready')
+           ), valid_selection AS (
+             SELECT count(*) = cardinality($5::uuid[]) AS is_valid FROM eligible
+           ), new_campaign AS (
+             INSERT INTO campaigns (name, mode, daily_target, timezone)
+             SELECT $1, $2, $3, $4 WHERE (SELECT is_valid FROM valid_selection) RETURNING id
+           ), numbered AS (
+             SELECT eligible.id, row_number() OVER (
+               ORDER BY eligible.natural_sort_number NULLS LAST, eligible.original_name, eligible.import_position
+             ) AS sequence_number FROM eligible
+           ), inserted_items AS (
+             INSERT INTO publication_items (campaign_id, media_asset_id, sequence_number)
+             SELECT new_campaign.id, numbered.id, numbered.sequence_number
+               FROM numbered CROSS JOIN new_campaign RETURNING id
+           )
+           SELECT new_campaign.id AS campaign_id, (SELECT count(*) FROM inserted_items)::int AS item_count
+             FROM new_campaign`,
+          [name, mode, dailyTarget, timezone, ids]
+        );
+        if (!result.rows.length) {
+          send(response, 422, { error: "selection_not_available", message: "Um ou mais vídeos não existem ou não estão disponíveis para uma campanha." }); return;
+        }
+        send(response, 201, { campaign: result.rows[0], status: "draft" }); return;
+      }
+
       if (request.method === "POST" && url.pathname === "/api/campaigns") {
         const body = await readJson(request);
         const name = requiredString(body.name, "name", 200);
