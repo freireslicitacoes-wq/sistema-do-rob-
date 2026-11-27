@@ -101,6 +101,10 @@ Foi criado um agendador periódico opcional para a limpeza, com intervalo config
 
 Foi criada uma central persistente para alertas de armazenamento, limpeza, processamento de cortes e publicações com falha ou resultado incerto. Alertas são deduplicados, mantêm histórico e podem ser reconhecidos pelo painel. A detecção ocorre ao consultar `GET /api/alerts`; monitoramento contínuo de serviços externos ainda não existe. Consulte [etapa 18](docs/step-18-alert-center.md).
 
+## Gerente de operações — etapa 19
+
+Foi criado o gerente em modo de diagnóstico: classifica alertas, recomenda ações seguras e registra histórico persistente. Ele não executa correções, retries, exclusões ou publicações automaticamente. O motor reserva ainda precisa ser auditado e validado, e o worker de cortes não está integrado ao servidor. Consulte [etapa 19](docs/step-19-operations-manager.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
