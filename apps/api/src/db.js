@@ -24,6 +24,19 @@ export function createDatabase({ connectionString, max = 10 } = {}) {
         client.release();
       }
     },
+    async withAdvisoryLock(key, callback) {
+      const client = await pool.connect();
+      let acquired = false;
+      try {
+        const result = await client.query("SELECT pg_try_advisory_lock($1::bigint) AS acquired", [key]);
+        acquired = result.rows[0]?.acquired === true;
+        if (!acquired) return { acquired: false };
+        return { acquired: true, result: await callback() };
+      } finally {
+        if (acquired) { try { await client.query("SELECT pg_advisory_unlock($1::bigint)", [key]); } finally { client.release(); } }
+        else client.release();
+      }
+    },
     async check() { await pool.query("SELECT 1"); return true; },
     close: () => pool.end()
   };
