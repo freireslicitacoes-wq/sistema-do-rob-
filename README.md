@@ -85,6 +85,10 @@ Toda habilidade crítica deve ter motor principal e reserva independente, com fa
 
 Foi criada a fundação do ciclo de armazenamento: política configurável de retenção (72 horas), preservação manual, estados de exclusão e limites de ocupação. A política começa desativada; nenhuma exclusão automática foi ligada. Docker Compose e CI aplicam a migration 004. Consulte [etapa 14](docs/step-14-storage-lifecycle-foundation.md). A rotina física de limpeza, medição de espaço e pausa de importações ainda precisam ser implementadas e testadas.
 
+## Monitoramento de armazenamento — etapa 15
+
+Foi implementado monitoramento do volume de mídia e bloqueio preventivo de novas importações: pausa no limite de 85% de ocupação ou abaixo de 1 GiB livre; retomada somente em 70% ou menos, respeitando a reserva mínima. O estado fica no banco e pode ser consultado em `GET /api/storage/status`. O Docker Compose ativa a proteção. Nenhum vídeo é apagado nesta etapa; a limpeza automática continua desativada. Consulte [etapa 15](docs/step-15-storage-capacity-guard.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
