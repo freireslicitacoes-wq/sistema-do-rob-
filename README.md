@@ -12,16 +12,22 @@ Projeto para organizar vídeos, gerar cortes e preparar publicações no TikTok 
 - Não armazenar tokens ou segredos no código-fonte.
 - Usar gerente de operações com autonomia controlada e aprovação humana antes de mudanças em produção.
 
-## Fluxo principal
+## Modos de trabalho do painel
 
-1. Importar vídeos de arquivos locais, Google Drive ou links compatíveis e autorizados.
-2. Analisar e gerar sugestões de cortes.
-3. Renderizar prévias e preparar título, descrição e hashtags editáveis.
-4. Enviar os resultados para a caixa **Aguardando aprovação**.
-5. Permitir seleção e aprovação em lote, com revisão por vídeo.
-6. Agendar somente os itens aprovados e autorizados.
-7. No momento do envio, consultar as informações atuais do criador e respeitar as opções e limites retornados pela API.
-8. Acompanhar o status da publicação e registrar falhas sem duplicar envios.
+1. **Publicar biblioteca (em massa):** listar vídeos do Drive individualmente e publicar os arquivos originais, um por vez, sem processamento de cortes. Especificação: [docs/bulk-library-publishing-mode.md](docs/bulk-library-publishing-mode.md).
+2. **Criar cortes de vídeos:** analisar vídeos gravados, gerar cortes e preparar versões verticais.
+3. **Monitorar live:** acompanhar fontes compatíveis e autorizadas, identificar momentos e criar rascunhos de cortes.
+
+O modo de publicação em massa é exclusivo enquanto estiver ativo: não inicia processamento de cortes nem monitoramento de lives para publicação. Consulte [docs/live-clipping-and-link-import.md](docs/live-clipping-and-link-import.md).
+
+## Fluxo de revisão e publicação
+
+- Pré-visualizar e editar título, descrição e hashtags.
+- Confirmar explicitamente a lista exata de itens antes de publicar.
+- Registrar aprovação e consentimento por item.
+- Agendar somente itens aprovados e autorizados.
+- No momento do envio, consultar as informações atuais do criador e respeitar as opções e limites retornados pela API oficial.
+- Acompanhar o status da publicação e registrar falhas sem duplicar envios.
 
 ## Inventário técnico de componentes
 
@@ -29,7 +35,7 @@ A avaliação inicial de motores de vídeo, licenças, dependências, riscos e p
 
 ## Aprovação em lote
 
-A aprovação em lote é o fluxo escolhido para o produto. A especificação está em [docs/approval-batch-flow.md](docs/approval-batch-flow.md).
+A especificação está em [docs/approval-batch-flow.md](docs/approval-batch-flow.md).
 
 ## Gerente de operações
 
