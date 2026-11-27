@@ -1,35 +1,32 @@
-# Banco de dados local
+# Execução local com Docker Compose
 
-Esta etapa usa PostgreSQL 17 em Docker Compose para persistir biblioteca, campanhas, fila, aprovações, tentativas e auditoria.
-
-## Iniciar
+Requer Docker Desktop ou Docker Engine com Docker Compose.
 
 Na raiz do repositório:
 
 ```bash
-docker compose -f infra/postgres/docker-compose.yml up -d
+docker compose -f infra/postgres/docker-compose.yml up -d --build
 ```
 
-## Aplicar a estrutura inicial
+O Compose inicia PostgreSQL, aguarda o health check, aplica a migration inicial e inicia a API. Depois abra http://localhost:3000 e confira http://localhost:3000/health.
 
-Com `psql` instalado:
+Os dados do banco e os vídeos ficam em volumes Docker persistentes. Para parar sem apagar os dados:
 
 ```bash
-psql "postgresql://tapai:local_dev_only_change_me@localhost:5432/tiktok_auto_publisher" -f infra/postgres/migrations/001_initial_schema.sql
+docker compose -f infra/postgres/docker-compose.yml stop
 ```
 
-A senha do Compose é apenas para desenvolvimento local. Antes de qualquer ambiente compartilhado ou produção, troque-a e use um gerenciador de segredos. Não reutilize essa senha fora do computador local.
+Para ver os logs da API:
 
-## Regras importantes do modelo
+```bash
+docker compose -f infra/postgres/docker-compose.yml logs -f api
+```
 
-- Cada arquivo tem identidade própria, hash opcional e dados de ordenação natural.
-- Uma campanha não pode conter o mesmo arquivo duas vezes.
-- A sequência é persistida e não depende da memória do processo.
-- Itens aprovados, agendados, em envio ou publicados exigem registro de aprovação e consentimento.
-- Cada tentativa de publicação recebe chave de idempotência única.
-- Resultado incerto fica distinguível de falha confirmada para evitar reenvio duplicado.
-- Eventos de auditoria registram mudanças relevantes.
+**Não execute** `docker compose down -v` se quiser preservar banco e vídeos: essa opção remove os volumes.
 
-## Limites
+## Segurança
 
-A migração SQL e o Compose foram adicionados ao repositório. A API ainda não está conectada ao PostgreSQL; a conexão, repositórios e testes de integração serão feitos em uma etapa posterior.
+- As portas são publicadas somente em localhost (127.0.0.1).
+- A senha padrão é apenas para desenvolvimento local. Não exponha a API à internet; ainda não há autenticação.
+- Os vídeos e o banco ficam no computador, não em nuvem. Não há backup automático.
+- Consulte [a documentação da etapa 8](../../docs/step-08-local-runtime.md) para detalhes.
