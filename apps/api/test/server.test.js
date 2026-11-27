@@ -120,3 +120,32 @@ test("dashboard exposes desktop upload and public Google Drive import forms", as
     assert.match(html, /não deve ser exposta à internet/i);
   });
 });
+
+test("campaign from library creates a draft with a validated selection", async () => {
+  const calls = [];
+  const database = { query: async (sql, values) => { calls.push({sql,values}); return {rows:[{campaign_id:"campaign-1",item_count:2}]}; } };
+  const ids = ["123e4567-e89b-42d3-a456-426614174000","123e4567-e89b-42d3-a456-426614174001"];
+  await withServer(createAppServer({database}), async base => {
+    const response = await fetch(base+"/api/campaigns/from-library", {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:"Lote de vídeos",media_asset_ids:ids})});
+    const body = await response.json();
+    assert.equal(response.status,201); assert.equal(body.status,"draft"); assert.equal(body.campaign.item_count,2);
+    assert.deepEqual(calls[0].values,["Lote de vídeos","bulk_library",null,"America/Belem",ids]);
+    assert.match(calls[0].sql,/row_number\(\) OVER/);
+  });
+});
+test("campaign from library rejects empty and duplicate selections", async () => {
+  const database={query:async()=>{throw new Error("query should not run");}};
+  await withServer(createAppServer({database}),async base=>{
+    for(const ids of [[],["123e4567-e89b-42d3-a456-426614174000","123e4567-e89b-42d3-a456-426614174000"]]){
+      const response=await fetch(base+"/api/campaigns/from-library",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:"Teste",media_asset_ids:ids})});
+      assert.equal(response.status,400);
+    }
+  });
+});
+test("campaign from library returns 422 if a selected asset is unavailable", async () => {
+  const database={query:async()=>({rows:[]})};
+  await withServer(createAppServer({database}),async base=>{
+    const response=await fetch(base+"/api/campaigns/from-library",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:"Teste",media_asset_ids:["123e4567-e89b-42d3-a456-426614174000"]})});
+    assert.equal(response.status,422);
+  });
+});
