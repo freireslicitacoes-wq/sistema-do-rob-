@@ -128,6 +128,36 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
+      if (request.method === "GET" && url.pathname === "/api/library/status") {
+        const result = await database.query(
+          `SELECT ma.id, ma.original_name, ma.file_size_bytes, ma.status AS asset_status,
+                  pi.status AS publication_status, pi.scheduled_at, pi.published_at,
+                  c.timezone,
+                  CASE
+                    WHEN pi.status = 'published' THEN 'published'
+                    WHEN pi.status = 'scheduled'
+                     AND pi.scheduled_at IS NOT NULL
+                     AND (pi.scheduled_at AT TIME ZONE c.timezone)::date =
+                         (now() AT TIME ZONE c.timezone)::date
+                    THEN 'pending_today'
+                    ELSE 'not_published'
+                  END AS visual_status
+             FROM media_assets ma
+             LEFT JOIN publication_items pi ON pi.media_asset_id = ma.id
+             LEFT JOIN campaigns c ON c.id = pi.campaign_id
+            ORDER BY ma.natural_sort_number NULLS LAST, ma.original_name, ma.import_position, pi.sequence_number
+            LIMIT 500`
+        );
+        const items = result.rows;
+        const summary = {
+          not_published: items.filter((item) => item.visual_status === "not_published").length,
+          pending_today: items.filter((item) => item.visual_status === "pending_today").length,
+          published: items.filter((item) => item.visual_status === "published").length
+        };
+        send(response, 200, { summary, items });
+        return;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/campaigns") {
         const result = await database.query(
           `SELECT id, name, mode, status, daily_target, timezone, created_at, updated_at
