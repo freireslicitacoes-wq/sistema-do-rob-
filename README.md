@@ -47,8 +47,12 @@ A fundação inicial da API foi criada em `apps/api`: servidor HTTP Node.js, rot
 
 ## Implementação — etapa 2
 
-Foi adicionada a estrutura inicial PostgreSQL em `infra/postgres`: biblioteca de arquivos, campanhas, fila de publicações, aprovações/consentimentos, tentativas idempotentes e auditoria. O Compose e as instruções locais estão em [infra/postgres/README.md](infra/postgres/README.md). A API ainda não está conectada ao banco.
+Foi adicionada a estrutura inicial PostgreSQL em `infra/postgres`: biblioteca de arquivos, campanhas, fila de publicações, aprovações/consentimentos, tentativas idempotentes e auditoria. O Compose e as instruções locais estão em [infra/postgres/README.md](infra/postgres/README.md).
+
+## Implementação — etapa 3
+
+A API agora possui pool PostgreSQL configurado por `DATABASE_URL`, health check com estado do banco e rotas para cadastrar/listar arquivos da biblioteca e campanhas. As consultas são parametrizadas e as entradas são validadas. Consulte [apps/api/README.md](apps/api/README.md). Os testes foram escritos, mas ainda não executados; a conexão real e a migration também precisam ser verificadas em ambiente com PostgreSQL.
 
 ## Estado atual
 
-A aplicação está em construção. Ainda não há integração TikTok, integração Google Drive, banco de dados, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
+A aplicação está em construção. A estrutura do banco e a camada de conexão da API foram criadas, mas ainda não há confirmação de execução da migration ou conexão real. Ainda não há integração TikTok, integração Google Drive, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
