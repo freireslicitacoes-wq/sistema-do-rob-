@@ -93,6 +93,10 @@ Foi implementado monitoramento do volume de mídia e bloqueio preventivo de nova
 
 Foi implementado o núcleo de limpeza com verificação de publicação, retenção configurada (72 horas por padrão), preservação manual, transação/lock, validação de caminho local e auditoria. A limpeza permanece desativada por padrão e ainda é manual; não há agendador automático nem validação em Docker local. Consulte [etapa 16](docs/step-16-safe-storage-cleanup.md).
 
+## Agendador de manutenção — etapa 17
+
+Foi criado um agendador periódico opcional para a limpeza, com intervalo configurável, lotes limitados, bloqueio advisory compartilhado no PostgreSQL, status e registro de falhas. Ele só inicia com `STORAGE_CLEANUP_SCHEDULER_ENABLED=true` e ainda exige `storage_policies.enabled=true`; ambos permanecem desligados por padrão. A rotina não publica conteúdo nem ativa exclusões automaticamente por padrão. Consulte [etapa 17](docs/step-17-storage-maintenance-scheduler.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
