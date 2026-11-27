@@ -60,3 +60,8 @@ curl -X POST http://localhost:3000/api/media-assets/import-google-drive \
 ## Verificação
 
 Os testes automatizados foram adicionados, mas precisam ser executados em ambiente Node.js com as dependências instaladas. A conexão PostgreSQL, migration e download real do Google Drive ainda não foram verificados neste ambiente.
+
+
+## Clip worker
+
+O núcleo do worker está em `src/clip-worker.js`. Ele reivindica tarefas com lock atômico e lease, registra tentativa e só conclui com o token de posse. Motores não validados não são executados; o trabalho vai para `needs_attention`. A integração real e o fallback ainda estão pendentes.
