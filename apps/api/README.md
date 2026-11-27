@@ -21,7 +21,9 @@ Variáveis:
 
 ## Rotas
 
+- `GET /`: painel web da biblioteca.
 - `GET /health`: saúde da API e do banco.
+- `GET /api/library/status`: totais e lista com estados visuais da biblioteca.
 - `GET /api/media-assets?limit=50`: lista biblioteca (máximo 100).
 - `POST /api/media-assets`: cadastro de metadados de um arquivo já armazenado.
 - `POST /api/media-assets/upload`: upload multipart/form-data, campo `video`.
