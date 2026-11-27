@@ -149,3 +149,31 @@ test("campaign from library returns 422 if a selected asset is unavailable", asy
     assert.equal(response.status,422);
   });
 });
+
+test("clip job creation queues an asset with primary and fallback engines", async () => {
+  const calls = [];
+  const database = { query: async (sql, values) => { calls.push({ sql, values }); return { rows: [{ id: "job-1", source_asset_id: values[0], status: "queued", primary_engine: "chopify", fallback_engine: "peakcut" }] }; } };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/clip-jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ media_asset_id: "123e4567-e89b-42d3-a456-426614174000" }) });
+    const body = await response.json();
+    assert.equal(response.status, 202); assert.equal(body.job.status, "queued");
+    assert.equal(body.job.primary_engine, "chopify"); assert.equal(body.job.fallback_engine, "peakcut");
+    assert.deepEqual(calls[0].values, ["123e4567-e89b-42d3-a456-426614174000", 5, 8]);
+  });
+});
+
+test("clip job creation validates options before database access", async () => {
+  const database = { query: async () => { throw new Error("should not query"); } };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/clip-jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ media_asset_id: "123e4567-e89b-42d3-a456-426614174000", max_clips: 100 }) });
+    assert.equal(response.status, 400);
+  });
+});
+
+test("queued clip job can be cancelled safely", async () => {
+  const database = { query: async (sql, values) => { assert.match(sql, /status = 'queued'/); return { rows: [{ id: values[0], status: "cancelled" }] }; } };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/clip-jobs/123e4567-e89b-42d3-a456-426614174000/cancel", { method: "POST" });
+    assert.equal(response.status, 200); assert.equal((await response.json()).job.status, "cancelled");
+  });
+});
