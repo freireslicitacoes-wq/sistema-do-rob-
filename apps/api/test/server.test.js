@@ -105,3 +105,18 @@ test("library status returns visual categories and counts", async () => {
     assert.doesNotMatch(sqlSeen, /pi\.timezone\s*=\s*pi\.timezone/);
   });
 });
+
+
+test("dashboard exposes desktop upload and public Google Drive import forms", async () => {
+  await withServer(createAppServer(), async (base) => {
+    const response = await fetch(base + "/");
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /id="uploadForm"/);
+    assert.match(html, /\/api\/media-assets\/upload/);
+    assert.match(html, /id="driveForm"/);
+    assert.match(html, /\/api\/media-assets\/import-google-drive/);
+    assert.match(html, /qualquer pessoa com o link/i);
+    assert.match(html, /não deve ser exposta à internet/i);
+  });
+});
