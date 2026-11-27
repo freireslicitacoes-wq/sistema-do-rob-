@@ -89,6 +89,10 @@ Foi criada a fundação do ciclo de armazenamento: política configurável de re
 
 Foi implementado monitoramento do volume de mídia e bloqueio preventivo de novas importações: pausa no limite de 85% de ocupação ou abaixo de 1 GiB livre; retomada somente em 70% ou menos, respeitando a reserva mínima. O estado fica no banco e pode ser consultado em `GET /api/storage/status`. O Docker Compose ativa a proteção. Nenhum vídeo é apagado nesta etapa; a limpeza automática continua desativada. Consulte [etapa 15](docs/step-15-storage-capacity-guard.md).
 
+## Limpeza segura do armazenamento — etapa 16
+
+Foi implementado o núcleo de limpeza com verificação de publicação, retenção configurada (72 horas por padrão), preservação manual, transação/lock, validação de caminho local e auditoria. A limpeza permanece desativada por padrão e ainda é manual; não há agendador automático nem validação em Docker local. Consulte [etapa 16](docs/step-16-safe-storage-cleanup.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
