@@ -61,6 +61,10 @@ Foram implementados endpoints de upload multipart do desktop e importação de a
 
 Foi adicionado um painel web inicial em `apps/web/index.html` com sinalização visual da biblioteca: vermelho para não publicados, amarelo para programados para hoje e verde para publicações confirmadas. A API ganhou `GET /api/library/status` para fornecer os totais e a lista. Consulte [documentação da etapa 5](docs/step-05-library-status-dashboard.md). A página ainda precisa ser servida e conectada à API; não há autenticação nem hospedagem configurada.
 
+## Importação pelo painel — etapa 9
+
+O painel agora oferece seleção de arquivo do computador e importação de link público de arquivo individual do Google Drive. Após a importação, a biblioteca é atualizada automaticamente. Consulte [guia da etapa 9](docs/step-09-dashboard-import.md). A interface foi adicionada ao repositório, mas ainda precisa ser testada com Docker em um computador. A API continua sem autenticação e deve permanecer acessível somente em localhost.
+
 ## Execução local integrada — etapa 8
 
 Foi adicionado um Dockerfile para a API e o Docker Compose agora inicia PostgreSQL, aplica a migration e inicia a API com volumes locais persistentes. As portas ficam vinculadas a localhost. Consulte [guia da etapa 8](docs/step-08-local-runtime.md). A configuração foi escrita no repositório, mas ainda precisa ser executada em um computador com Docker; não há confirmação de inicialização real.
