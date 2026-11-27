@@ -69,6 +69,10 @@ O painel agora oferece seleção de arquivo do computador e importação de link
 
 Foi adicionado um Dockerfile para a API e o Docker Compose agora inicia PostgreSQL, aplica a migration e inicia a API com volumes locais persistentes. As portas ficam vinculadas a localhost. Consulte [guia da etapa 8](docs/step-08-local-runtime.md). A configuração foi escrita no repositório, mas ainda precisa ser executada em um computador com Docker; não há confirmação de inicialização real.
 
+## Seleção e criação de campanha — etapa 10
+
+O painel permite selecionar vídeos da biblioteca e criar uma campanha em rascunho, com sequência natural. Isso não aprova, agenda ou publica. Consulte [guia da etapa 10](docs/step-10-campaign-selection.md). Testes escritos, ainda sem execução confirmada.
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
