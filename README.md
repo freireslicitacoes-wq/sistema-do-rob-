@@ -61,6 +61,12 @@ Foram implementados endpoints de upload multipart do desktop e importação de a
 
 Foi adicionado um painel web inicial em `apps/web/index.html` com sinalização visual da biblioteca: vermelho para não publicados, amarelo para programados para hoje e verde para publicações confirmadas. A API ganhou `GET /api/library/status` para fornecer os totais e a lista. Consulte [documentação da etapa 5](docs/step-05-library-status-dashboard.md). A página ainda precisa ser servida e conectada à API; não há autenticação nem hospedagem configurada.
 
+## Execução local integrada — etapa 8
+
+Foi adicionado um Dockerfile para a API e o Docker Compose agora inicia PostgreSQL, aplica a migration e inicia a API com volumes locais persistentes. As portas ficam vinculadas a localhost. Consulte [guia da etapa 8](docs/step-08-local-runtime.md). A configuração foi escrita no repositório, mas ainda precisa ser executada em um computador com Docker; não há confirmação de inicialização real.
+
 ## Estado atual
 
-A aplicação está em construção. A estrutura do banco e a camada de conexão da API foram criadas, mas ainda não há confirmação de execução da migration ou conexão real. Ainda não há integração TikTok, integração Google Drive, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
+A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
+
+Ainda faltam: autenticação e proteção da API, fluxo de criação/aprovação/agendamento da campanha, processamento de cortes, integração oficial com TikTok, agendador confiável, monitoramento e política de exclusão após 72 horas. Não há publicação automática implementada nem deploy em nuvem.
