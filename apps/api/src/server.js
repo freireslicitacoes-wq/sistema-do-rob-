@@ -61,7 +61,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
     batchSize: Math.min(100, Math.max(1, Number(env.STORAGE_CLEANUP_BATCH_SIZE || 25)))
   }) : null;
 
-  return createServer(async (request, response) => {
+  const server = createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
     response.setHeader("x-content-type-options", "nosniff");
     response.setHeader("cache-control", "no-store");
