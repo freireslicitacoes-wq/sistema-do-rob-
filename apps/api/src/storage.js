@@ -186,7 +186,7 @@ export function createStorageManager({ database, directory, fileOps = { lstat, u
       `UPDATE media_assets SET preserve_storage=$2,
          storage_state=CASE WHEN $2 THEN 'active' ELSE storage_state END,
          storage_last_error=CASE WHEN $2 THEN NULL ELSE storage_last_error END,
-         updated_at=now() WHERE id=$1::uuid
+         updated_at=now() WHERE id=$1::uuid AND storage_state IN ('active','needs_attention')
        RETURNING id, original_name, preserve_storage, storage_state`,
       [assetId, preserve]
     );
