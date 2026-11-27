@@ -1,61 +1,60 @@
-# Etapa 3 — API conectada ao PostgreSQL
+# API — configuração e ingestão local de mídia
 
-## O que foi implementado
+## Dependências e inicialização
 
-- Cliente PostgreSQL usando o pacote oficial comunitário `pg`, com pool e encerramento controlado.
-- Configuração da conexão exclusivamente por `DATABASE_URL`.
-- `GET /health` informa se o banco está conectado, indisponível ou ainda não configurado, sem revelar credenciais ou detalhes internos.
-- Cadastro e listagem de itens da biblioteca:
-  - `POST /api/media-assets`
-  - `GET /api/media-assets?limit=50` (limite máximo de 100)
-- Cadastro e listagem de campanhas:
-  - `POST /api/campaigns`
-  - `GET /api/campaigns`
-- Consultas SQL parametrizadas, validação de entrada, limite de corpo JSON de 1 MB e respostas de erro sem detalhes internos.
+Requer Node.js 20 ou superior e PostgreSQL com a migration inicial aplicada.
 
-## Configuração local
-
-1. Instale Node.js 20 ou superior.
-2. Na pasta `apps/api`, execute `npm install`.
-3. Inicie o PostgreSQL conforme [infra/postgres/README.md](../../infra/postgres/README.md) e aplique a migration inicial.
-4. Configure `DATABASE_URL` no ambiente local. Não publique a URL nem a senha no Git.
-5. Execute `npm test` e depois `npm start`.
-
-Sem `DATABASE_URL`, a API ainda inicia para permitir diagnóstico, mas as rotas de dados respondem 503. O health informa `not_configured`.
-
-## Exemplos de requisição
-
-Criar campanha:
-
-```json
-{
-  "name": "Biblioteca principal",
-  "mode": "bulk_library",
-  "daily_target": 10,
-  "timezone": "America/Belem"
-}
+```bash
+cd apps/api
+npm install
+cp .env.example .env
+# configure DATABASE_URL e, se desejar, MEDIA_STORAGE_DIR/MAX_UPLOAD_BYTES
+npm test
+npm start
 ```
 
-Cadastrar arquivo já armazenado:
+Variáveis:
+- `DATABASE_URL`: conexão PostgreSQL.
+- `MEDIA_STORAGE_DIR`: diretório persistente de arquivos; padrão `./var/media`.
+- `MAX_UPLOAD_BYTES`: limite por vídeo em bytes; padrão 500 MiB.
+- `PORT`: porta HTTP; padrão 3000.
 
-```json
-{
-  "source_type": "upload",
-  "original_name": "video-01.mp4",
-  "storage_reference": "local://media/video-01.mp4",
-  "mime_type": "video/mp4",
-  "file_size_bytes": 12000000,
-  "duration_ms": 45000,
-  "natural_sort_number": 1
-}
+## Rotas
+
+- `GET /health`: saúde da API e do banco.
+- `GET /api/media-assets?limit=50`: lista biblioteca (máximo 100).
+- `POST /api/media-assets`: cadastro de metadados de um arquivo já armazenado.
+- `POST /api/media-assets/upload`: upload multipart/form-data, campo `video`.
+- `POST /api/media-assets/import-google-drive`: JSON `{"url":"https://drive.google.com/file/d/ID/view","filename":"video.mp4"}`; filename é opcional e sua extensão deve corresponder ao vídeo.
+- `GET /api/campaigns` e `POST /api/campaigns`: campanhas.
+
+Exemplo de upload com curl:
+
+```bash
+curl -F "video=@./meu-video.mp4" http://localhost:3000/api/media-assets/upload
 ```
 
-A referência de armazenamento é apenas um identificador; esta etapa não faz upload, download ou sincronização com Google Drive.
+Exemplo de importação Drive:
 
-## Limites desta etapa
+```bash
+curl -X POST http://localhost:3000/api/media-assets/import-google-drive \
+  -H "content-type: application/json" \
+  -d '{"url":"https://drive.google.com/file/d/ID/view","filename":"video.mp4"}'
+```
 
-- A migration PostgreSQL não é executada automaticamente pela API.
-- Não há autenticação/autorização HTTP nesta etapa; não exponha a API publicamente.
-- Não há integração Google Drive, TikTok, agendador ou painel.
-- Os testes adicionados usam banco simulado. Ainda precisam ser executados em ambiente Node.js; nenhum resultado de execução é declarado aqui.
-- A conexão real e a migration ainda precisam ser verificadas em um ambiente com PostgreSQL disponível.
+## Proteções e comportamento
+
+- Upload é transmitido em fluxo para disco, sem carregar o arquivo inteiro na memória.
+- O limite é aplicado durante o upload/download; extensões aceitas: MP4, MOV, M4V, WebM, MKV e AVI.
+- O servidor verifica assinatura básica do contêiner, calcula SHA-256 e usa nome aleatório no armazenamento. O nome original fica no banco.
+- O arquivo original não é recortado, reencodado nem alterado.
+- O importador Drive aceita somente links HTTPS do domínio Drive reconhecido. Redirecionamentos são validados e URLs externas arbitrárias não são aceitas.
+- Se o Drive entregar página HTML de confirmação, bloqueio ou erro em vez do vídeo, a importação falha com mensagem; não tenta contornar CAPTCHA, permissões ou controles do Google.
+- Arquivos ficam no disco do host onde a API roda. Isso não é armazenamento cloud durável; em contêiner efêmero, os dados podem desaparecer. Configure volume persistente antes de uso real.
+- Em erro ao registrar metadados, o arquivo recém-salvo é removido.
+- Não há autenticação HTTP ainda. **Não exponha essas rotas à internet nem use dados privados antes de adicionar autenticação, autorização e limites operacionais.** Use HTTPS no ambiente de rede.
+- Não há interface visual, importação de pastas, processamento de vídeo ou publicação TikTok nesta entrega.
+
+## Verificação
+
+Os testes automatizados foram adicionados, mas precisam ser executados em ambiente Node.js com as dependências instaladas. A conexão PostgreSQL, migration e download real do Google Drive ainda não foram verificados neste ambiente.
