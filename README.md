@@ -57,6 +57,10 @@ A API agora possui pool PostgreSQL configurado por `DATABASE_URL`, health check 
 
 Foram implementados endpoints de upload multipart do desktop e importação de arquivo individual por link público do Google Drive. Os originais são armazenados em disco local configurável, com limite de tamanho, validação básica de formato e hash SHA-256, e registrados na biblioteca PostgreSQL. O Drive pode exigir confirmação e recusar download direto; pastas inteiras e links privados não são suportados. A interface visual e autenticação ainda não existem. Não exponha a API à internet. Consulte [docs/step-04-ingestion-inputs.md](docs/step-04-ingestion-inputs.md) e [apps/api/README.md](apps/api/README.md).
 
+## Implementação — etapa 5
+
+Foi adicionado um painel web inicial em `apps/web/index.html` com sinalização visual da biblioteca: vermelho para não publicados, amarelo para programados para hoje e verde para publicações confirmadas. A API ganhou `GET /api/library/status` para fornecer os totais e a lista. Consulte [documentação da etapa 5](docs/step-05-library-status-dashboard.md). A página ainda precisa ser servida e conectada à API; não há autenticação nem hospedagem configurada.
+
 ## Estado atual
 
 A aplicação está em construção. A estrutura do banco e a camada de conexão da API foram criadas, mas ainda não há confirmação de execução da migration ou conexão real. Ainda não há integração TikTok, integração Google Drive, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
