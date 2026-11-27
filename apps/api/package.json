@@ -1,6 +1,6 @@
 {
   "name": "@tiktok-auto-publisher/api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20" },
@@ -8,5 +8,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
   }
 }
