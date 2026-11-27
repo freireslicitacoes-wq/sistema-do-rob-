@@ -97,6 +97,10 @@ Foi implementado o núcleo de limpeza com verificação de publicação, retenç
 
 Foi criado um agendador periódico opcional para a limpeza, com intervalo configurável, lotes limitados, bloqueio advisory compartilhado no PostgreSQL, status e registro de falhas. Ele só inicia com `STORAGE_CLEANUP_SCHEDULER_ENABLED=true` e ainda exige `storage_policies.enabled=true`; ambos permanecem desligados por padrão. A rotina não publica conteúdo nem ativa exclusões automaticamente por padrão. Consulte [etapa 17](docs/step-17-storage-maintenance-scheduler.md).
 
+## Central de alertas — etapa 18
+
+Foi criada uma central persistente para alertas de armazenamento, limpeza, processamento de cortes e publicações com falha ou resultado incerto. Alertas são deduplicados, mantêm histórico e podem ser reconhecidos pelo painel. A detecção ocorre ao consultar `GET /api/alerts`; monitoramento contínuo de serviços externos ainda não existe. Consulte [etapa 18](docs/step-18-alert-center.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
