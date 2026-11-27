@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { mkdir, rename, rm, stat } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import { join, basename, extname } from "node:path";
 import { randomUUID, createHash } from "node:crypto";
 import { Transform, Readable } from "node:stream";
