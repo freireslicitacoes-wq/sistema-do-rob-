@@ -53,6 +53,10 @@ Foi adicionada a estrutura inicial PostgreSQL em `infra/postgres`: biblioteca de
 
 A API agora possui pool PostgreSQL configurado por `DATABASE_URL`, health check com estado do banco e rotas para cadastrar/listar arquivos da biblioteca e campanhas. As consultas são parametrizadas e as entradas são validadas. Consulte [apps/api/README.md](apps/api/README.md). Os testes foram escritos, mas ainda não executados; a conexão real e a migration também precisam ser verificadas em ambiente com PostgreSQL.
 
+## Implementação — etapa 4
+
+Foram definidos dois caminhos de entrada: link compartilhado de arquivo do Google Drive e arquivo anexado pelo computador. A API ganhou um parser seguro para reconhecer formatos comuns de links públicos do Drive. O download, upload binário, armazenamento e interface ainda serão implementados. Consulte [docs/step-04-ingestion-inputs.md](docs/step-04-ingestion-inputs.md).
+
 ## Estado atual
 
 A aplicação está em construção. A estrutura do banco e a camada de conexão da API foram criadas, mas ainda não há confirmação de execução da migration ou conexão real. Ainda não há integração TikTok, integração Google Drive, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
