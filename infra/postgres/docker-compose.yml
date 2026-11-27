@@ -32,6 +32,7 @@ services:
       -f /migrations/001_initial_schema.sql
       -f /migrations/002_clip_jobs_and_fallback.sql
       -f /migrations/003_clip_job_leases.sql
+      -f /migrations/004_storage_lifecycle.sql
 
   api:
     build:
