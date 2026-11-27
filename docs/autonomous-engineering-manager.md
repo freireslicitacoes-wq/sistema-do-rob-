@@ -116,3 +116,11 @@ Não registrar tokens, senhas, chaves privadas ou conteúdo sensível nos logs.
 - Uma regressão em staging ou canário aciona bloqueio/rollback conforme a política.
 - O agente não consegue acessar segredos de produção nem mudar seus próprios limites.
 - Incidentes anteriores podem ser consultados sem expor segredos.
+
+## Política obrigatória de redundância e continuidade
+
+Toda capacidade crítica deve ter motor principal e reserva independente, quando houver alternativa técnica viável. Registrar cobertura, dependências, licença, sinais de falha, limites de tentativas, failover, retorno ao principal e testes de contrato.
+
+O gerente deve diagnosticar; tentar recuperação segura e limitada; se persistir, colocar o principal em quarentena para aquele trabalho e encaminhar ao reserva validado; se ambos falharem, manter a tarefa persistida em estado de atenção, preservar arquivos/logs e informar o bloqueio. Nunca apagar a tarefa, ignorar falha ou declarar sucesso sem evidência.
+
+Failover só após falha confirmada ou encerramento comprovado do motor anterior. Em timeout/estado incerto, verificar processo, arquivos e manifesto antes de repetir. A saída de cada motor deve passar pela mesma validação. Um motor reserva listado ainda não está habilitado: exige auditoria, instalação, teste, verificação de licença e aprovação de configuração. Se não houver reserva viável, registrar a lacuna.
