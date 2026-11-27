@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 
@@ -34,7 +35,7 @@ def run_job(source: Path, media_root: Path, output_root: Path, chopify_dir: Path
         raise ValueError("min_score deve estar entre 0 e 10.")
 
     output_root.mkdir(parents=True, exist_ok=True)
-    job_id = re.sub(r"[^a-zA-Z0-9_-]", "_", source.stem)[:48] + "-" + str(os.getpid())
+    job_id = re.sub(r"[^a-zA-Z0-9_-]", "_", source.stem)[:48] + "-" + uuid.uuid4().hex[:12]
     job_dir = output_root / job_id
     exports = job_dir / "exports"
     projects = job_dir / "projects"
