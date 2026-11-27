@@ -97,24 +97,21 @@ export function createStorageManager({ database, directory, fileOps = { lstat, u
              FROM media_assets ma
             WHERE ma.preserve_storage = FALSE
               AND ma.storage_state IN ('active','deletion_pending')
-              AND (
-                ma.storage_state = 'deletion_pending'
-                OR (
-                  EXISTS (SELECT 1 FROM publication_items pi WHERE pi.media_asset_id=ma.id)
-                  AND NOT EXISTS (
-                    SELECT 1 FROM publication_items pi
-                     WHERE pi.media_asset_id=ma.id AND
-                       (pi.status <> 'published' OR pi.published_at IS NULL)
-                  )
-                  AND NOT EXISTS (
-                    SELECT 1 FROM publication_attempts pa
-                    JOIN publication_items pi ON pi.id=pa.publication_item_id
-                     WHERE pi.media_asset_id=ma.id AND pa.status <> 'succeeded'
-                  )
-                  AND (SELECT max(pi.published_at) FROM publication_items pi
-                        WHERE pi.media_asset_id=ma.id) + make_interval(hours => sp.retention_hours) <= now()
-                )
+              AND EXISTS (SELECT 1 FROM publication_items pi WHERE pi.media_asset_id=ma.id)
+              AND NOT EXISTS (
+                SELECT 1 FROM publication_items pi
+                 WHERE pi.media_asset_id=ma.id AND
+                   (pi.status <> 'published' OR pi.published_at IS NULL)
               )
+              AND NOT EXISTS (
+                SELECT 1 FROM publication_attempts pa
+                JOIN publication_items pi ON pi.id=pa.publication_item_id
+                 WHERE pi.media_asset_id=ma.id AND pa.status <> 'succeeded'
+              )
+              AND (SELECT max(pi.published_at) FROM publication_items pi
+                    WHERE pi.media_asset_id=ma.id) + make_interval(hours => sp.retention_hours) <= now()
+            CROSS JOIN storage_policies sp
+            WHERE sp.id = 1
             ORDER BY ma.delete_after NULLS FIRST, ma.created_at
             FOR UPDATE OF ma SKIP LOCKED
             LIMIT $1
