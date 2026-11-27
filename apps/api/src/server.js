@@ -102,6 +102,25 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
+      if (request.method === "POST" && url.pathname === "/api/storage/cleanup") {
+        if (!storage) { send(response, 503, { error: "storage_not_configured", message: "Armazenamento não configurado." }); return; }
+        const body = await readJson(request);
+        const limit = body.limit === undefined ? 25 : body.limit;
+        const result = await storage.cleanup({ limit });
+        send(response, result.enabled ? 200 : 409, { cleanup: result });
+        return;
+      }
+
+      const preserveMatch = url.pathname.match(/^\\/api\\/media-assets\\/([0-9a-f-]{36})\\/preserve$/i);
+      if (request.method === "POST" && preserveMatch) {
+        const body = await readJson(request);
+        if (typeof body.preserve !== "boolean") { send(response, 400, { error: "invalid_preserve_value", message: "Informe preserve como true ou false." }); return; }
+        const item = await storage.setPreserve(preserveMatch[1], body.preserve);
+        if (!item) { send(response, 404, { error: "media_asset_not_found", message: "Vídeo não encontrado." }); return; }
+        send(response, 200, { item });
+        return;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/media-assets") {
         const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 50), 1), 100);
         const result = await database.query(
