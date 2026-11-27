@@ -143,9 +143,16 @@ export function createAppServer({ env = process.env, database = null } = {}) {
                     ELSE 'not_published'
                   END AS visual_status
              FROM media_assets ma
-             LEFT JOIN publication_items pi ON pi.media_asset_id = ma.id
-             LEFT JOIN campaigns c ON c.id = pi.campaign_id
-            ORDER BY ma.natural_sort_number NULLS LAST, ma.original_name, ma.import_position, pi.sequence_number
+             LEFT JOIN LATERAL (
+               SELECT item.status, item.scheduled_at, item.published_at, item.sequence_number, campaign.timezone
+                 FROM publication_items item
+                 JOIN campaigns campaign ON campaign.id = item.campaign_id
+                WHERE item.media_asset_id = ma.id
+                ORDER BY item.updated_at DESC, item.sequence_number DESC
+                LIMIT 1
+             ) pi ON TRUE
+             LEFT JOIN campaigns c ON c.timezone = pi.timezone
+            ORDER BY ma.natural_sort_number NULLS LAST, ma.original_name, ma.import_position
             LIMIT 500`
         );
         const items = result.rows;
