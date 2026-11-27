@@ -4,6 +4,7 @@ import { createIngestionHandler } from "./ingestion.js";
 import { createStorageManager } from "./storage.js";
 import { createStorageCleanupScheduler } from "./storage-scheduler.js";
 import { createAlertManager } from "./alerts.js";
+import { createOperationsManager } from "./operations-manager.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -56,6 +57,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
   const handleIngestion = createIngestionHandler({ database, env });
   const storage = database ? createStorageManager({ database, directory: env.MEDIA_STORAGE_DIR || "./var/media" }) : null;
   const alerts = database ? createAlertManager({ database }) : null;
+  const operationsManager = database ? createOperationsManager({ database, alerts }) : null;
   const cleanupScheduler = storage ? createStorageCleanupScheduler({
     storage, database,
     enabled: env.STORAGE_CLEANUP_SCHEDULER_ENABLED === "true",
@@ -101,6 +103,23 @@ export function createAppServer({ env = process.env, database = null } = {}) {
 
       if (!database) {
         send(response, 503, { error: "database_not_configured", message: "Banco de dados não configurado." });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/manager/history") {
+        const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") || 20)));
+        send(response,200,{items:await operationsManager.history(limit)});
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/manager/status") {
+        send(response,200,{manager:{available:true,mode:"diagnostic_only",automatic_repairs:false,primary_engine_validation_required:true,fallback_engine_validation_required:true,publication_retry_automatic:false}});
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/manager/diagnose") {
+        const report = await operationsManager.diagnose();
+        send(response,200,{report});
         return;
       }
 
