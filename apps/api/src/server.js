@@ -172,6 +172,61 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
+      if (request.method === "POST" && url.pathname === "/api/clip-jobs") {
+        const body = await readJson(request);
+        const assetId = requiredString(body.media_asset_id, "media_asset_id", 36);
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidPattern.test(assetId)) { send(response, 400, { error: "invalid_media_asset_id", message: "Identificador do vídeo inválido." }); return; }
+        const maxClips = body.max_clips === undefined ? 5 : body.max_clips;
+        const minScore = body.min_score === undefined ? 8 : body.min_score;
+        if (!Number.isInteger(maxClips) || maxClips < 1 || maxClips > 50 || typeof minScore !== "number" || !Number.isFinite(minScore) || minScore < 0 || minScore > 10) {
+          send(response, 400, { error: "invalid_clip_options", message: "max_clips deve ser 1–50 e min_score de 0–10." }); return;
+        }
+        const result = await database.query(
+          `INSERT INTO clip_jobs (source_asset_id, max_clips, min_score)
+           SELECT id, $2, $3 FROM media_assets WHERE id = $1::uuid AND status IN ('imported', 'ready')
+           RETURNING id, source_asset_id, status, primary_engine, fallback_engine, active_engine, max_clips, min_score, created_at`,
+          [assetId, maxClips, minScore]
+        );
+        if (!result.rows.length) { send(response, 422, { error: "asset_not_available", message: "Vídeo não encontrado ou indisponível para gerar cortes." }); return; }
+        send(response, 202, { job: result.rows[0], message: "Trabalho registrado na fila; o processamento será iniciado pelo worker." }); return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/clip-jobs") {
+        const result = await database.query(
+          `SELECT j.id, j.source_asset_id, m.original_name, j.status, j.primary_engine, j.fallback_engine,
+                  j.active_engine, j.max_clips, j.min_score, j.last_error, j.created_at, j.started_at, j.finished_at
+             FROM clip_jobs j JOIN media_assets m ON m.id = j.source_asset_id
+            ORDER BY j.created_at DESC LIMIT 100`
+        );
+        send(response, 200, { items: result.rows }); return;
+      }
+
+      const clipJobMatch = url.pathname.match(/^\\/api\\/clip-jobs\\/([0-9a-f-]{36})(\\/cancel)?$/i);
+      if (request.method === "GET" && clipJobMatch && !clipJobMatch[2]) {
+        const result = await database.query(
+          `SELECT j.*, m.original_name,
+                  COALESCE(json_agg(json_build_object('id', a.id, 'engine_name', a.engine_name,
+                    'attempt_number', a.attempt_number, 'status', a.status, 'error_code', a.error_code,
+                    'error_summary', a.error_summary, 'started_at', a.started_at, 'finished_at', a.finished_at)
+                    ORDER BY a.started_at) FILTER (WHERE a.id IS NOT NULL), '[]'::json) AS attempts
+             FROM clip_jobs j JOIN media_assets m ON m.id = j.source_asset_id
+             LEFT JOIN clip_job_attempts a ON a.clip_job_id = j.id
+            WHERE j.id = $1::uuid GROUP BY j.id, m.original_name`, [clipJobMatch[1]]
+        );
+        if (!result.rows.length) { send(response, 404, { error: "clip_job_not_found", message: "Trabalho não encontrado." }); return; }
+        send(response, 200, { job: result.rows[0] }); return;
+      }
+
+      if (request.method === "POST" && clipJobMatch && clipJobMatch[2] === "/cancel") {
+        const result = await database.query(
+          `UPDATE clip_jobs SET status = 'cancelled', updated_at = now()
+            WHERE id = $1::uuid AND status = 'queued' RETURNING id, status`, [clipJobMatch[1]]
+        );
+        if (!result.rows.length) { send(response, 409, { error: "clip_job_not_cancellable", message: "Só é possível cancelar um trabalho que ainda esteja aguardando na fila." }); return; }
+        send(response, 200, { job: result.rows[0] }); return;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/campaigns") {
         const result = await database.query(
           `SELECT id, name, mode, status, daily_target, timezone, created_at, updated_at
