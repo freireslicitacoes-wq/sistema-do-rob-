@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
 import { createIngestionHandler } from "./ingestion.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
@@ -59,6 +60,13 @@ export function createAppServer({ env = process.env, database = null } = {}) {
     try {
       const url = new URL(request.url, "http://localhost");
       if (await handleIngestion(request, response, url.pathname)) return;
+
+      if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
+        const html = await readFile(new URL("../../web/index.html", import.meta.url));
+        response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+        response.end(html);
+        return;
+      }
 
       if (request.method === "GET" && url.pathname === "/health") {
         let databaseStatus = "not_configured";
@@ -151,7 +159,6 @@ export function createAppServer({ env = process.env, database = null } = {}) {
                 ORDER BY item.updated_at DESC, item.sequence_number DESC
                 LIMIT 1
              ) pi ON TRUE
-             LEFT JOIN campaigns c ON pi.timezone = pi.timezone
             ORDER BY ma.natural_sort_number NULLS LAST, ma.original_name, ma.import_position
             LIMIT 500`
         );
