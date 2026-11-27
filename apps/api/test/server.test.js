@@ -83,7 +83,7 @@ test("dashboard is served from the API root", async () => {
     const html = await response.text();
     assert.equal(response.status, 200);
     assert.match(response.headers.get("content-type"), /text\/html/);
-    assert.match(html, /Biblioteca de vídeos/);
+    assert.match(html, /TikTok Auto Publisher AI/);
   });
 });
 
