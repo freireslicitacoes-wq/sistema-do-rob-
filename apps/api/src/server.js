@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createIngestionHandler } from "./ingestion.js";
 import { createStorageManager } from "./storage.js";
 import { createStorageCleanupScheduler } from "./storage-scheduler.js";
+import { createAlertManager } from "./alerts.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -54,6 +55,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
   const serviceName = env.SERVICE_NAME || "tiktok-auto-publisher-api";
   const handleIngestion = createIngestionHandler({ database, env });
   const storage = database ? createStorageManager({ database, directory: env.MEDIA_STORAGE_DIR || "./var/media" }) : null;
+  const alerts = database ? createAlertManager({ database }) : null;
   const cleanupScheduler = storage ? createStorageCleanupScheduler({
     storage, database,
     enabled: env.STORAGE_CLEANUP_SCHEDULER_ENABLED === "true",
@@ -99,6 +101,22 @@ export function createAppServer({ env = process.env, database = null } = {}) {
 
       if (!database) {
         send(response, 503, { error: "database_not_configured", message: "Banco de dados não configurado." });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/alerts") {
+        const status = url.searchParams.get("status") || "active";
+        if (!["active","acknowledged","resolved","all"].includes(status)) { send(response,400,{error:"invalid_alert_status",message:"Filtro de alertas inválido."}); return; }
+        const items = await alerts.list({ status, limit: Math.min(200,Math.max(1,Number(url.searchParams.get("limit")||100))) });
+        send(response,200,{items,summary:{active:items.filter(a=>a.status==="active").length,acknowledged:items.filter(a=>a.status==="acknowledged").length,resolved:items.filter(a=>a.status==="resolved").length}});
+        return;
+      }
+
+      const acknowledgeMatch = url.pathname.match(/^\\/api\\/alerts\\/([0-9a-f-]{36})\\/acknowledge$/i);
+      if (request.method === "POST" && acknowledgeMatch) {
+        const item = await alerts.acknowledge(acknowledgeMatch[1]);
+        if (!item) { send(response,404,{error:"alert_not_found_or_inactive",message:"Alerta não encontrado ou já não está ativo."}); return; }
+        send(response,200,{item});
         return;
       }
 
