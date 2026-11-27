@@ -129,7 +129,7 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
       let uploadName = "";
       let fileSeen = false;
       let tooLarge = false;
-      let writeError = null;
+      let fileWrite = null;
       try {
         const parser = Busboy({ headers: request.headers, limits: { files: 1, fileSize: maxBytes, fields: 0, parts: 1 } });
         const finished = new Promise((resolve, reject) => {
@@ -138,8 +138,7 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
             fileSeen = true;
             uploadName = safeName(info.filename);
             stream.on("limit", () => { tooLarge = true; });
-            stream.on("error", error => { writeError = error; });
-            stream.pipe(createWriteStream(tempPath, { flags: "wx" }).on("error", error => { writeError = error; }));
+            fileWrite = pipeline(stream, createWriteStream(tempPath, { flags: "wx" }));
           });
           parser.on("filesLimit", () => reject(Object.assign(new Error("Somente um arquivo é permitido."), { statusCode: 400 })));
           parser.on("error", reject);
@@ -147,7 +146,7 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
         });
         request.pipe(parser);
         await finished;
-        if (writeError) throw writeError;
+        if (fileWrite) await fileWrite;
         if (!fileSeen) throw Object.assign(new Error("Nenhum arquivo foi enviado no campo video."), { statusCode: 400 });
         if (tooLarge) throw Object.assign(new Error("Arquivo acima do limite configurado."), { statusCode: 413 });
         const item = await persistAsset({ tempPath, name: uploadName, sourceType: "upload", sourceReference: null, directory, database, maxBytes });
