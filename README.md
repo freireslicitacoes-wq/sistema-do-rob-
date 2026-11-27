@@ -45,6 +45,10 @@ O gerente poderá monitorar, diagnosticar, executar recuperações previamente a
 
 A fundação inicial da API foi criada em `apps/api`: servidor HTTP Node.js, rota de saúde, tratamento de rota inexistente, testes automatizados e exemplo seguro de configuração. Consulte [docs/step-01-foundation.md](docs/step-01-foundation.md). Os testes ainda precisam ser executados em ambiente Node.js; não há confirmação de execução nesta etapa.
 
+## Implementação — etapa 2
+
+Foi adicionada a estrutura inicial PostgreSQL em `infra/postgres`: biblioteca de arquivos, campanhas, fila de publicações, aprovações/consentimentos, tentativas idempotentes e auditoria. O Compose e as instruções locais estão em [infra/postgres/README.md](infra/postgres/README.md). A API ainda não está conectada ao banco.
+
 ## Estado atual
 
 A aplicação está em construção. Ainda não há integração TikTok, integração Google Drive, banco de dados, painel web, agendador ou publicação implementados. As próximas entregas devem ser feitas em etapas pequenas, testáveis e documentadas.
