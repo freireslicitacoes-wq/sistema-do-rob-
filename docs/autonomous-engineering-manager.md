@@ -1,10 +1,10 @@
-# Gerente autônomo de engenharia e operações
+# Gerente de operações com autonomia controlada
 
 ## Objetivo
 
-O sistema terá um gerente com autonomia avançada para diagnosticar falhas, propor e desenvolver correções, executar testes automaticamente e aprender com incidentes. O gerente não terá permissão para publicar alterações diretamente em produção sem passar pelos controles definidos neste documento.
+O sistema terá um gerente com autonomia controlada para diagnosticar falhas, executar recuperações operacionais previamente autorizadas, desenvolver correções em ambiente isolado, executar testes automaticamente e aprender com incidentes. O gerente não terá permissão para publicar alterações diretamente em produção sem passar pelos controles definidos neste documento.
 
-A autonomia vale para investigação, desenvolvimento e validação em ambientes isolados. Produção permanece protegida por barreiras técnicas.
+O gerente poderá trabalhar de forma independente na investigação, desenvolvimento e validação. Ações operacionais automáticas ficam limitadas a uma lista segura e predefinida. Produção permanece protegida por barreiras técnicas e aprovação humana.
 
 ## Responsabilidades do gerente
 
@@ -23,14 +23,14 @@ A autonomia vale para investigação, desenvolvimento e validação em ambientes
 - Diagnosticar e classificar incidentes.
 - Consultar logs, métricas e estado das filas.
 - Reexecutar operações comprovadamente idempotentes, respeitando limites de tentativas.
-- Reiniciar serviços/containers não críticos por política predefinida.
+- Reiniciar somente serviços/containers não críticos previamente autorizados por política.
 - Pausar automaticamente a fila diante de risco de duplicação, autorização inválida, limite da plataforma ou estado incerto.
 - Criar branches, editar código, abrir pull requests e executar testes em sandbox/CI.
 - Preparar releases e relatórios de validação.
 
 ### Exige aprovação humana
 
-- Fazer merge ou promover uma versão para produção, inicialmente.
+- Fazer merge ou promover uma versão para produção.
 - Alterar banco de dados de produção ou executar migrações destrutivas.
 - Alterar permissões, OAuth scopes, políticas de segurança ou gestão de segredos.
 - Alterar regras de publicação, consentimento, privacidade ou limites TikTok.
@@ -103,7 +103,7 @@ Não registrar tokens, senhas, chaves privadas ou conteúdo sensível nos logs.
 4. Permitir ao agente criar branches e pull requests.
 5. Adicionar staging, backups e rollback.
 6. Integrar guardião de release e aprovação humana.
-7. Só depois avaliar automação adicional, mantendo a aprovação humana para produção até existir histórico comprovado e uma decisão explícita de mudar essa política.
+7. Manter aprovação humana para toda promoção a produção. Qualquer ampliação futura de autonomia exige decisão explícita do usuário, revisão de risco e alteração documentada desta política.
 
 ## Critérios de aceite
 
