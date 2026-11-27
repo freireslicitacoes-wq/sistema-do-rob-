@@ -132,13 +132,13 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         const result = await database.query(
           `SELECT ma.id, ma.original_name, ma.file_size_bytes, ma.status AS asset_status,
                   pi.status AS publication_status, pi.scheduled_at, pi.published_at,
-                  c.timezone,
+                  pi.timezone,
                   CASE
                     WHEN pi.status = 'published' THEN 'published'
                     WHEN pi.status = 'scheduled'
                      AND pi.scheduled_at IS NOT NULL
-                     AND (pi.scheduled_at AT TIME ZONE c.timezone)::date =
-                         (now() AT TIME ZONE c.timezone)::date
+                     AND (pi.scheduled_at AT TIME ZONE pi.timezone)::date =
+                         (now() AT TIME ZONE pi.timezone)::date
                     THEN 'pending_today'
                     ELSE 'not_published'
                   END AS visual_status
@@ -151,7 +151,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
                 ORDER BY item.updated_at DESC, item.sequence_number DESC
                 LIMIT 1
              ) pi ON TRUE
-             LEFT JOIN campaigns c ON c.timezone = pi.timezone
+             LEFT JOIN campaigns c ON pi.timezone = pi.timezone
             ORDER BY ma.natural_sort_number NULLS LAST, ma.original_name, ma.import_position
             LIMIT 500`
         );
