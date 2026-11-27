@@ -23,6 +23,10 @@ Projeto para organizar vídeos, gerar cortes e preparar publicações no TikTok 
 7. No momento do envio, consultar as informações atuais do criador e respeitar as opções e limites retornados pela API.
 8. Acompanhar o status da publicação e registrar falhas sem duplicar envios.
 
+## Inventário técnico de componentes
+
+A avaliação inicial de motores de vídeo, licenças, dependências, riscos e plano de testes está em [docs/repository-inventory.md](docs/repository-inventory.md). Nenhum componente externo foi instalado ou integrado ainda.
+
 ## Aprovação em lote
 
 A aprovação em lote é o fluxo escolhido para o produto. A especificação está em [docs/approval-batch-flow.md](docs/approval-batch-flow.md).
