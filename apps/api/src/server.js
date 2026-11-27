@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { createIngestionHandler } from "./ingestion.js";
+import { createStorageManager } from "./storage.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -51,6 +52,7 @@ function optionalNonNegativeInteger(value, field) {
 export function createAppServer({ env = process.env, database = null } = {}) {
   const serviceName = env.SERVICE_NAME || "tiktok-auto-publisher-api";
   const handleIngestion = createIngestionHandler({ database, env });
+  const storage = database ? createStorageManager({ database, directory: env.MEDIA_STORAGE_DIR || "./var/media" }) : null;
 
   return createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
@@ -90,6 +92,13 @@ export function createAppServer({ env = process.env, database = null } = {}) {
 
       if (!database) {
         send(response, 503, { error: "database_not_configured", message: "Banco de dados não configurado." });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/storage/status") {
+        if (!storage) { send(response, 503, { error: "storage_not_configured", message: "Armazenamento não configurado." }); return; }
+        await (await import("node:fs/promises")).mkdir(env.MEDIA_STORAGE_DIR || "./var/media", { recursive: true });
+        send(response, 200, { storage: await storage.inspect() });
         return;
       }
 
