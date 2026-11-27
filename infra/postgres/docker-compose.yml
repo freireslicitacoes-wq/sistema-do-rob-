@@ -35,6 +35,7 @@ services:
       -f /migrations/004_storage_lifecycle.sql
       -f /migrations/005_storage_capacity_guard.sql
       -f /migrations/006_system_alerts.sql
+      -f /migrations/007_operations_manager.sql
 
   api:
     build:
