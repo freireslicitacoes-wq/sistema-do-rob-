@@ -81,8 +81,12 @@ Foi criado um adaptador local para o Chopify em `apps/clipper`, com isolamento d
 
 Toda habilidade crítica deve ter motor principal e reserva independente, com failover controlado e tarefas preservadas até conclusão ou decisão humana. Para cortes: Chopify é principal e PeakCut está definido como reserva a validar; failover ainda não está ativo. Consulte [etapa 12](docs/step-12-clip-jobs-fallback.md).
 
+## Ciclo de armazenamento — etapa 14
+
+Foi criada a fundação do ciclo de armazenamento: política configurável de retenção (72 horas), preservação manual, estados de exclusão e limites de ocupação. A política começa desativada; nenhuma exclusão automática foi ligada. Docker Compose e CI aplicam a migration 004. Consulte [etapa 14](docs/step-14-storage-lifecycle-foundation.md). A rotina física de limpeza, medição de espaço e pausa de importações ainda precisam ser implementadas e testadas.
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
 
-Ainda faltam: autenticação e proteção da API, fluxo de criação/aprovação/agendamento da campanha, processamento de cortes, integração oficial com TikTok, agendador confiável, monitoramento e política de exclusão após 72 horas. Não há publicação automática implementada nem deploy em nuvem.
+Ainda faltam: autenticação e proteção da API, fluxo de criação/aprovação/agendamento da campanha, processamento de cortes, integração oficial com TikTok, agendador confiável, monitoramento e rotina de exclusão após 72 horas. Não há publicação automática implementada nem deploy em nuvem.
