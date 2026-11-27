@@ -4,23 +4,47 @@ on:
   push:
     paths:
       - "apps/api/**"
+      - "infra/postgres/migrations/**"
       - ".github/workflows/api-tests.yml"
   pull_request:
     paths:
       - "apps/api/**"
+      - "infra/postgres/migrations/**"
       - ".github/workflows/api-tests.yml"
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: publisher_test
+          POSTGRES_USER: publisher
+          POSTGRES_PASSWORD: publisher_test_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U publisher -d publisher_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://publisher:publisher_test_only@localhost:5432/publisher_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply database schema
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/001_initial_schema.sql
       - name: Install API dependencies
         working-directory: apps/api
         run: npm install --ignore-scripts
-      - name: Run API tests
+      - name: Run API and PostgreSQL integration tests
         working-directory: apps/api
         run: npm test
