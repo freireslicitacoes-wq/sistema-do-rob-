@@ -54,6 +54,7 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/003_clip_job_leases.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/004_storage_lifecycle.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/005_storage_capacity_guard.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/006_system_alerts.sql
       - name: Install API dependencies
         working-directory: apps/api
         run: npm install --ignore-scripts
