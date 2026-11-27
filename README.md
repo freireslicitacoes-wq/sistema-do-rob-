@@ -77,6 +77,10 @@ O painel permite selecionar vídeos da biblioteca e criar uma campanha em rascun
 
 Foi criado um adaptador local para o Chopify em `apps/clipper`, com isolamento de pastas, saída 9:16 e testes simulados. O motor upstream ainda não foi instalado nem executado; veja [guia da etapa 11](docs/step-11-chopify-adapter.md). A fila persistente e a integração do painel ainda virão.
 
+## Redundância de ferramentas
+
+Toda habilidade crítica deve ter motor principal e reserva independente, com failover controlado e tarefas preservadas até conclusão ou decisão humana. Para cortes: Chopify é principal e PeakCut está definido como reserva a validar; failover ainda não está ativo. Consulte [etapa 12](docs/step-12-clip-jobs-fallback.md).
+
 ## Estado atual
 
 A aplicação continua em construção. Há API, importação inicial de arquivos, painel de biblioteca, schema PostgreSQL e execução local preparada via Docker Compose. Ainda não foi confirmado que o conjunto inicia corretamente em ambiente real. A API não possui autenticação; não deve ser exposta à internet. Os arquivos ficam no computador, sem backup automático ou nuvem.
