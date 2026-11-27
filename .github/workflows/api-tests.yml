@@ -45,7 +45,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes postgresql-client
       - name: Apply database schema
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/001_initial_schema.sql
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/001_initial_schema.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/002_clip_jobs_and_fallback.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/postgres/migrations/003_clip_job_leases.sql
       - name: Install API dependencies
         working-directory: apps/api
         run: npm install --ignore-scripts
