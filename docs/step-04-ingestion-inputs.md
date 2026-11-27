@@ -1,41 +1,48 @@
-# Etapa 4 — Formas de entrada da biblioteca
+# Etapa 4/5 — Entrada de vídeos e armazenamento local
 
-O sistema terá dois caminhos simples para receber vídeos:
+## Formas de entrada
 
-## 1. Link compartilhado do Google Drive
+1. **Google Drive:** colar o link compartilhado individual, público para quem possui o link.
+2. **Desktop:** selecionar/anexar um arquivo no computador; o backend recebe multipart/form-data.
 
-- O usuário cola o link individual do arquivo.
-- Nesta primeira modalidade, o arquivo deve estar compartilhado como qualquer pessoa com o link pode visualizar ou baixar.
-- A API identifica o ID do arquivo em formatos comuns de link do Drive.
-- Validar o link não significa que o arquivo já foi baixado. A etapa seguinte implementará o download controlado, conferência de tamanho/tipo e armazenamento.
-- Pastas inteiras e links privados ainda não são processados por esta primeira modalidade.
-- Um link público pode ser acessado por qualquer pessoa que o possua; não usar para conteúdo confidencial.
+Ambos registram o vídeo na mesma tabela `media_assets`.
 
-## 2. Arquivo anexado pelo computador
+## Implementado no backend
 
-- No desktop, o usuário seleciona ou arrasta o arquivo para a área de envio.
-- O navegador transmite o arquivo ao backend por upload HTTPS.
-- O backend deverá validar tamanho, extensão, MIME real e integridade antes de aceitar o arquivo.
-- O arquivo original deve ser preservado no modo biblioteca em massa.
-- A interface de upload e o armazenamento efetivo serão implementados na próxima parte da ingestão; ainda não estão ativos.
+- Parser de links HTTPS do Google Drive com allowlist de domínio.
+- Rota `POST /api/media-assets/upload`, campo multipart `video`, com transmissão em fluxo para disco.
+- Rota `POST /api/media-assets/import-google-drive`, que baixa um arquivo individual por ID reconhecido no link.
+- Armazenamento local configurável por `MEDIA_STORAGE_DIR`, padrão `./var/media`.
+- Limite por arquivo configurável em `MAX_UPLOAD_BYTES`, padrão 500 MiB.
+- Extensões aceitas: MP4, MOV, M4V, WebM, MKV e AVI.
+- Conferência básica da assinatura do contêiner, cálculo SHA-256 e nome interno aleatório.
+- Registro no PostgreSQL com origem, nome original, tamanho, tipo, hash e número inicial para ordenação natural.
+- Se a gravação no banco falhar após salvar o arquivo, o arquivo é removido.
 
-## Regras comuns
+## Como chamar
 
-- Os dois caminhos alimentam a mesma biblioteca de vídeos.
-- O sistema registra a origem de cada arquivo.
-- Não modificar, recortar ou reencodar o original no modo biblioteca em massa.
-- Não aceitar URLs arbitrárias para download. Isso evita que um link seja usado para acessar serviços internos ou endereços privados.
-- Não presumir que um link público garante download: permissões, limites, arquivos grandes e páginas intermediárias do Drive podem exigir tratamento adicional.
+Upload desktop:
+```bash
+curl -F "video=@./meu-video.mp4" http://localhost:3000/api/media-assets/upload
+```
 
-## O que esta etapa entrega
+Link público Drive:
+```bash
+curl -X POST http://localhost:3000/api/media-assets/import-google-drive \
+  -H "content-type: application/json" \
+  -d '{"url":"https://drive.google.com/file/d/ID/view","filename":"video.mp4"}'
+```
 
-Foi criado um parser para reconhecer links HTTPS de arquivos do Google Drive nos formatos /file/d/ID/view e /open?id=ID, rejeitando domínios não autorizados e links malformados. Testes também foram escritos, mas ainda não executados.
+## Limitações e segurança
 
-## Ainda não implementado
+- O download Drive pode falhar se o Google retornar uma página de confirmação, quota, bloqueio ou erro. O sistema informa a falha; não contorna permissões, CAPTCHA ou controles do Drive.
+- Importação de pastas completas e arquivos privados não implementada.
+- Armazenamento é local ao servidor, não nuvem. Em hospedagem com disco efêmero, arquivos podem sumir; precisa volume persistente ou storage durável antes de produção.
+- A API ainda não tem autenticação. Não exponha upload/download publicamente até implementar autenticação, autorização, rate limit e HTTPS.
+- Validação de assinatura é básica e não substitui antivírus ou análise completa de mídia.
+- Não existe interface visual ainda.
+- Não executamos npm install, testes, migration nem download real nesta sessão. Os testes foram escritos, não declarados como aprovados.
 
-- Download do arquivo a partir do Drive.
-- Upload binário do desktop.
-- Armazenamento local ou em nuvem.
-- Importação de pastas completas.
-- Interface visual para colar links ou anexar arquivos.
-- Verificação real de disponibilidade/permissão do arquivo.
+## Próxima etapa
+
+Criar a interface web simples para colar link do Drive ou anexar vídeo, visualizar o resultado da importação e listar a biblioteca. Antes de publicar a API em ambiente acessível pela internet, implementar autenticação e armazenamento persistente.
