@@ -315,7 +315,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
-      const campaignDetailMatch = url.pathname.match(/^\\/api\\/campaigns\\/([0-9a-f-]{36})$/i);
+      const campaignDetailMatch = url.pathname.match(/^\/api\/campaigns\/([0-9a-f-]{36})$/i);
       if (request.method === "GET" && campaignDetailMatch) {
         const result = await database.query(
           `SELECT c.id, c.name, c.mode, c.status, c.daily_target, c.timezone, c.created_at, c.updated_at,
