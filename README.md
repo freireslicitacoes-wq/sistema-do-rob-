@@ -101,6 +101,10 @@ Foi criado um agendador periódico opcional para a limpeza, com intervalo config
 
 Foi criada uma central persistente para alertas de armazenamento, limpeza, processamento de cortes e publicações com falha ou resultado incerto. Alertas são deduplicados, mantêm histórico e podem ser reconhecidos pelo painel. A detecção ocorre ao consultar `GET /api/alerts`; monitoramento contínuo de serviços externos ainda não existe. Consulte [etapa 18](docs/step-18-alert-center.md).
 
+## Auditoria de motores — etapa 20
+
+Foi auditada documentalmente a licença, arquitetura e dependências de Chopify e PeakCut. Ambos permanecem pendentes e desativados até testes reais. O catálogo de motores e a política de failover seguro foram adicionados; nenhum fallback automático foi ativado. Consulte [etapa 20](docs/step-20-engine-audit.md).
+
 ## Gerente de operações — etapa 19
 
 Foi criado o gerente em modo de diagnóstico: classifica alertas, recomenda ações seguras e registra histórico persistente. Ele não executa correções, retries, exclusões ou publicações automaticamente. O motor reserva ainda precisa ser auditado e validado, e o worker de cortes não está integrado ao servidor. Consulte [etapa 19](docs/step-19-operations-manager.md).
