@@ -315,6 +315,35 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
+      const campaignDetailMatch = url.pathname.match(/^\\/api\\/campaigns\\/([0-9a-f-]{36})$/i);
+      if (request.method === "GET" && campaignDetailMatch) {
+        const result = await database.query(
+          `SELECT c.id, c.name, c.mode, c.status, c.daily_target, c.timezone, c.created_at, c.updated_at,
+                  COALESCE(json_agg(json_build_object(
+                    'publication_item_id', pi.id,
+                    'sequence_number', pi.sequence_number,
+                    'publication_status', pi.status,
+                    'scheduled_at', pi.scheduled_at,
+                    'published_at', pi.published_at,
+                    'video_id', ma.id,
+                    'video_name', ma.original_name,
+                    'asset_status', ma.status
+                  ) ORDER BY pi.sequence_number) FILTER (WHERE pi.id IS NOT NULL), '[]'::json) AS videos
+             FROM campaigns c
+             LEFT JOIN publication_items pi ON pi.campaign_id = c.id
+             LEFT JOIN media_assets ma ON ma.id = pi.media_asset_id
+            WHERE c.id = $1::uuid
+            GROUP BY c.id`,
+          [campaignDetailMatch[1]]
+        );
+        if (!result.rows.length) {
+          send(response, 404, { error: "campaign_not_found", message: "Campanha não encontrada." });
+          return;
+        }
+        send(response, 200, { campaign: result.rows[0] });
+        return;
+      }
+
 
       if (request.method === "POST" && url.pathname === "/api/campaigns/from-library") {
         const body = await readJson(request);
