@@ -31,6 +31,38 @@ test("unknown routes return 404", async () => {
   });
 });
 
+test("campaign detail returns its associated videos in sequence", async () => {
+  const campaign = {
+    id: "123e4567-e89b-42d3-a456-426614174000",
+    name: "Campanha teste",
+    status: "draft",
+    videos: [{ sequence_number: 1, video_name: "video.mp4", publication_status: "draft" }]
+  };
+  let sqlSeen = "";
+  const database = { query: async (sql, values) => {
+    sqlSeen = sql;
+    assert.deepEqual(values, [campaign.id]);
+    return { rows: [campaign] };
+  } };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/campaigns/" + campaign.id);
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(body.campaign.videos[0].video_name, "video.mp4");
+    assert.match(sqlSeen, /LEFT JOIN publication_items/);
+    assert.match(sqlSeen, /ORDER BY pi\.sequence_number/);
+  });
+});
+
+test("campaign detail returns 404 when campaign does not exist", async () => {
+  const database = { query: async () => ({ rows: [] }) };
+  await withServer(createAppServer({ database }), async (base) => {
+    const response = await fetch(base + "/api/campaigns/123e4567-e89b-42d3-a456-426614174000");
+    assert.equal(response.status, 404);
+    assert.equal((await response.json()).error, "campaign_not_found");
+  });
+});
+
 test("campaign creation uses parameterized SQL and default timezone", async () => {
   const calls = [];
   const database = {
