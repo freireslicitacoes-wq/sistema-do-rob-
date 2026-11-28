@@ -133,7 +133,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
-      const acknowledgeMatch = url.pathname.match(/^\\/api\\/alerts\\/([0-9a-f-]{36})\\/acknowledge$/i);
+      const acknowledgeMatch = url.pathname.match(/^\/api\/alerts\/([0-9a-f-]{36})\/acknowledge$/i);
       if (request.method === "POST" && acknowledgeMatch) {
         const item = await alerts.acknowledge(acknowledgeMatch[1]);
         if (!item) { send(response,404,{error:"alert_not_found_or_inactive",message:"Alerta não encontrado ou já não está ativo."}); return; }
@@ -162,7 +162,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         return;
       }
 
-      const preserveMatch = url.pathname.match(/^\\/api\\/media-assets\\/([0-9a-f-]{36})\\/preserve$/i);
+      const preserveMatch = url.pathname.match(/^\/api\/media-assets\/([0-9a-f-]{36})\/preserve$/i);
       if (request.method === "POST" && preserveMatch) {
         const body = await readJson(request);
         if (typeof body.preserve !== "boolean") { send(response, 400, { error: "invalid_preserve_value", message: "Informe preserve como true ou false." }); return; }
@@ -281,7 +281,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
         send(response, 200, { items: result.rows }); return;
       }
 
-      const clipJobMatch = url.pathname.match(/^\\/api\\/clip-jobs\\/([0-9a-f-]{36})(\\/cancel)?$/i);
+      const clipJobMatch = url.pathname.match(/^\/api\/clip-jobs\/([0-9a-f-]{36})(\/cancel)?$/i);
       if (request.method === "GET" && clipJobMatch && !clipJobMatch[2]) {
         const result = await database.query(
           `SELECT j.*, m.original_name,
