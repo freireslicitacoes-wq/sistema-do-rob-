@@ -26,17 +26,32 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-local_dev_only_change_me}
     volumes:
       - ./migrations:/migrations:ro
-    entrypoint: ["/bin/sh", "-c"]
-    command: >
-      psql -h postgres -U tapai -d tiktok_auto_publisher -v ON_ERROR_STOP=1
-      -f /migrations/001_initial_schema.sql
-      -f /migrations/002_clip_jobs_and_fallback.sql
-      -f /migrations/003_clip_job_leases.sql
-      -f /migrations/004_storage_lifecycle.sql
-      -f /migrations/005_storage_capacity_guard.sql
-      -f /migrations/006_system_alerts.sql
-      -f /migrations/007_operations_manager.sql
-      -f /migrations/008_clip_engine_registry.sql
+    entrypoint: ["psql"]
+    command:
+      - -h
+      - postgres
+      - -U
+      - tapai
+      - -d
+      - tiktok_auto_publisher
+      - -v
+      - ON_ERROR_STOP=1
+      - -f
+      - /migrations/001_initial_schema.sql
+      - -f
+      - /migrations/002_clip_jobs_and_fallback.sql
+      - -f
+      - /migrations/003_clip_job_leases.sql
+      - -f
+      - /migrations/004_storage_lifecycle.sql
+      - -f
+      - /migrations/005_storage_capacity_guard.sql
+      - -f
+      - /migrations/006_system_alerts.sql
+      - -f
+      - /migrations/007_operations_manager.sql
+      - -f
+      - /migrations/008_clip_engine_registry.sql
 
   api:
     build:
