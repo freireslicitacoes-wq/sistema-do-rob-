@@ -36,6 +36,7 @@ services:
       -f /migrations/005_storage_capacity_guard.sql
       -f /migrations/006_system_alerts.sql
       -f /migrations/007_operations_manager.sql
+      -f /migrations/008_clip_engine_registry.sql
 
   api:
     build:
