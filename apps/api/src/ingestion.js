@@ -153,8 +153,13 @@ export function createIngestionHandler({ database, env = process.env } = {}) {
         if (!fileSeen) throw Object.assign(new Error("Nenhum arquivo foi enviado no campo video."), { statusCode: 400 });
         if (tooLarge) throw Object.assign(new Error("Arquivo acima do limite configurado."), { statusCode: 413 });
         const item = await persistAsset({ tempPath, name: uploadName, sourceType: "upload", sourceReference: null, directory, database, maxBytes });
-        response.writeHead(201, { "content-type": "application/json; charset=utf-8" });
-        response.end(JSON.stringify({ item }));
+        if ((request.headers.accept || "").toLowerCase().includes("text/html")) {
+          response.writeHead(303, { location: "/?upload=success", "cache-control": "no-store" });
+          response.end();
+        } else {
+          response.writeHead(201, { "content-type": "application/json; charset=utf-8" });
+          response.end(JSON.stringify({ item }));
+        }
       } catch (error) {
         await rm(tempPath, { force: true });
         throw error;
