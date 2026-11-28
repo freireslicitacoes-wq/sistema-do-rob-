@@ -5,6 +5,7 @@ import { createStorageManager } from "./storage.js";
 import { createStorageCleanupScheduler } from "./storage-scheduler.js";
 import { createAlertManager } from "./alerts.js";
 import { createOperationsManager } from "./operations-manager.js";
+import { createClipEngineRegistry } from "./clip-engine-registry.js";
 
 const JSON_LIMIT_BYTES = 1024 * 1024;
 
@@ -58,6 +59,7 @@ export function createAppServer({ env = process.env, database = null } = {}) {
   const storage = database ? createStorageManager({ database, directory: env.MEDIA_STORAGE_DIR || "./var/media" }) : null;
   const alerts = database ? createAlertManager({ database }) : null;
   const operationsManager = database ? createOperationsManager({ database, alerts }) : null;
+  const clipEngineRegistry = database ? createClipEngineRegistry({ database }) : null;
   const cleanupScheduler = storage ? createStorageCleanupScheduler({
     storage, database,
     enabled: env.STORAGE_CLEANUP_SCHEDULER_ENABLED === "true",
